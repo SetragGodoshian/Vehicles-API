@@ -1,6 +1,8 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vehicles_API.Data;
+using Vehicles_API.Interfaces;
 using Vehicles_API.Models;
 using Vehicles_API.ViewModels;
 
@@ -11,8 +13,12 @@ namespace Vehicles_API.Controllers
     public class VehiclesController : ControllerBase
     {
         private readonly VehicleContext _context;
-        public VehiclesController(VehicleContext context)
+        private readonly IVehicleRepository _vehicleRepo;
+        private readonly IMapper _mapper;
+        public VehiclesController(VehicleContext context, IVehicleRepository vehicleRepo, IMapper mapper)
         {
+            _mapper = mapper;
+            _vehicleRepo = vehicleRepo;
             _context = context;
         }
 
@@ -21,36 +27,31 @@ namespace Vehicles_API.Controllers
         [HttpGet()]
         public async Task<ActionResult<List<VehicleViewModel>>> ListVehicles()
         {
-            var response = await _context.Vehicles.ToListAsync();
-            var vehicleList = new List<VehicleViewModel>();
-
-            foreach (var vehicle in response)
-            {
-                vehicleList.Add(
-                    new VehicleViewModel
-                    {
-                        VehicleId = vehicle.Id,
-                        RegNo = vehicle.RegNo,
-                        VehicleName = string.Concat(vehicle.Make, " ", vehicle.Model),
-                        ModelYear = vehicle.ModelYear,
-                        Mileage = vehicle.Mileage
-                    }
-                );
-            }
-            return Ok(vehicleList);
+            return Ok(await _vehicleRepo.ListAllVehiclesAsync());
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Vehicle>> GetVehicleById(int id)
+        public async Task<ActionResult<VehicleViewModel>> GetVehicleById(int id)
         {
-            var response = await _context.Vehicles.FindAsync(id);
-            return Ok(response);
+            try
+            {
+                var response = await _vehicleRepo.GetVehicleAsync(id);
+
+                if (response is null)
+                    return NotFound($"Vi kunde inte hitta någon bil med id: {id}");
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("byregno/{regNo}")]
         public async Task<ActionResult<Vehicle>> GetVehicleByRegNo(string regNo)
         {
-            var response = await _context.Vehicles.SingleOrDefaultAsync(c => c.RegNo!.ToLower() == regNo.ToLower());
+            var response = await _vehicleRepo.GetVehicleAsync(regNo);
 
             if (response is null)
                 return NotFound($"Vi kunde inte hitta någon bil med registeringsnummer: {regNo}");
@@ -61,14 +62,7 @@ namespace Vehicles_API.Controllers
         [HttpPost]
         public async Task<ActionResult<Vehicle>> AddVehicle(PostVehicleViewModel vehicle)
         {
-            var vehicleToAdd = new Vehicle
-            {
-                RegNo = vehicle.RegNo,
-                Make = vehicle.Make,
-                Model = vehicle.Model,
-                ModelYear = vehicle.ModelYear,
-                Mileage = vehicle.Mileage
-            };
+            var vehicleToAdd = _mapper.Map<Vehicle>(vehicle);
 
             await _context.Vehicles.AddAsync(vehicleToAdd);
             await _context.SaveChangesAsync();
@@ -98,17 +92,15 @@ namespace Vehicles_API.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteVehicle(int id)
         {
-            var response = await _context.Vehicles.FindAsync(id);
+            _vehicleRepo.DeleteVehicle(id);
 
-            if (response is null)
-                return NotFound($"vi kunde inte hitta någon bil med id: {id} som skulle tas bort ");
+            if (await _vehicleRepo.SaveAllAsync())
+            {
+                return NoContent();
+            }
 
-            _context.Vehicles.Remove(response);
-            await _context.SaveChangesAsync();
+            return StatusCode(500, "Hoppsan något gick fel");
 
-            return NoContent();
         }
-
-
     }
 }

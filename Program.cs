@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Vehicles_API.Data;
+using Vehicles_API.Helpers;
+using Vehicles_API.Interfaces;
+using Vehicles_API.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<VehicleContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite"))
 );
+
+
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+
+
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
