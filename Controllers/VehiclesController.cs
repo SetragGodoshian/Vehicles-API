@@ -12,14 +12,13 @@ namespace Vehicles_API.Controllers
     [Route("api/v1/vehicles")]
     public class VehiclesController : ControllerBase
     {
-        private readonly VehicleContext _context;
+
         private readonly IVehicleRepository _vehicleRepo;
         private readonly IMapper _mapper;
-        public VehiclesController(VehicleContext context, IVehicleRepository vehicleRepo, IMapper mapper)
+        public VehiclesController(IVehicleRepository vehicleRepo, IMapper mapper)
         {
             _mapper = mapper;
             _vehicleRepo = vehicleRepo;
-            _context = context;
         }
 
 
@@ -60,39 +59,48 @@ namespace Vehicles_API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Vehicle>> AddVehicle(PostVehicleViewModel vehicle)
+        public async Task<ActionResult> AddVehicle(PostVehicleViewModel model)
         {
-            var vehicleToAdd = _mapper.Map<Vehicle>(vehicle);
+            if (await _vehicleRepo.GetVehicleAsync(model.RegNo!.ToLower()) is not null)
+            {
+                return BadRequest($"Registeringsnummer {model.RegNo} finss redan i systmet");
+            }
 
-            await _context.Vehicles.AddAsync(vehicleToAdd);
-            await _context.SaveChangesAsync();
-            return StatusCode(201, vehicleToAdd);
+            await _vehicleRepo.AddVehicleAsync(model);
+
+            if (await _vehicleRepo.SaveAllAsync())
+            {
+                return StatusCode(201);
+            }
+
+            return StatusCode(500, "Det gick inte att spara fordonet");
+
+
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateVehicle(int id, Vehicle model)
+        public async Task<ActionResult> UpdateVehicle(int id, PostVehicleViewModel model)
         {
-            var response = await _context.Vehicles.FindAsync(id);
+            try
+            {
+                await _vehicleRepo.UpdateVehicle(id, model);
+                if (await _vehicleRepo.SaveAllAsync())
+                {
+                    return NoContent();
+                }
+                return StatusCode(500, "Ett fel inträffade när fordonet skulle uppdateras");
+            }
+            catch (Exception ex)
+            {
 
-            if (response is null)
-                return NotFound($"Vi kunde inte hitta någon bil med id: {id}");
-
-            response.RegNo = model.RegNo;
-            response.Make = model.Make;
-            response.Model = model.Model;
-            response.ModelYear = model.ModelYear;
-            response.Mileage = model.Mileage;
-
-            _context.Vehicles.Update(response);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteVehicle(int id)
         {
-            _vehicleRepo.DeleteVehicle(id);
+            await _vehicleRepo.DeleteVehicle(id);
 
             if (await _vehicleRepo.SaveAllAsync())
             {

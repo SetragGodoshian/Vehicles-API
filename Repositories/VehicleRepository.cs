@@ -18,14 +18,15 @@ namespace Vehicles_API.Repositories
             _context = context;
         }
 
-        public Task AddVehicleAsync(Vehicle model)
+        public async Task AddVehicleAsync(PostVehicleViewModel model)
         {
-            throw new NotImplementedException();
+            var vehicleToAdd = _mapper.Map<Vehicle>(model);
+            await _context.Vehicles.AddAsync(vehicleToAdd);
         }
 
-        public void DeleteVehicle(int id)
+        public async Task DeleteVehicle(int id)
         {
-            var response = _context.Vehicles.Find(id);
+            var response = await _context.Vehicles.FindAsync(id);
             if (response is not null)
             {
                 _context.Vehicles.Remove(response);
@@ -56,9 +57,23 @@ namespace Vehicles_API.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public void UpdateVehicle(int id, Vehicle model)
+        public async Task UpdateVehicle(int id, PostVehicleViewModel model)
         {
-            throw new NotImplementedException();
+            var vehicle = await _context.Vehicles.FindAsync(id);
+
+            if (vehicle is null)
+            {
+                throw new Exception($"Vi kunde inte hitta något fordon med id: {id}");
+            }
+
+            vehicle.RegNo = model.RegNo;
+            vehicle.Make = model.Make;
+            vehicle.Model = model.Model;
+            vehicle.ModelYear = model.ModelYear;
+            vehicle.Mileage = model.Mileage;
+
+            _context.Vehicles.Update(vehicle);
+
         }
     }
 }
