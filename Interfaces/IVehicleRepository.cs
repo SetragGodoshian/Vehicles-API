@@ -10,7 +10,7 @@ namespace Vehicles_API.Interfaces
     public interface IVehicleRepository
     {
         public Task<List<VehicleViewModel>> ListAllVehiclesAsync();
-        public Task<List<VehicleViewModel>> GetVehiclesByMakeAsync(string make);
+        // public Task<List<VehicleViewModel>> GetVehiclesByMakeAsync(string make);
         public Task<VehicleViewModel?> GetVehicleAsync(int id);
         public Task<VehicleViewModel?> GetVehicleAsync(string regNummer);
         public Task AddVehicleAsync(PostVehicleViewModel model);

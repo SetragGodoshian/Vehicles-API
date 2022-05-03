@@ -47,13 +47,13 @@ namespace Vehicles_API.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<List<VehicleViewModel>> GetVehiclesByMakeAsync(string make)
-        {
-            return await _context.Vehicles
-            .Where(c => c.Make!.ToLower() == make.ToLower())
-            .ProjectTo<VehicleViewModel>(_mapper.ConfigurationProvider)
-            .ToListAsync();
-        }
+        // public async Task<List<VehicleViewModel>> GetVehiclesByMakeAsync(string make)
+        // {
+        //     return await _context.Vehicles
+        //     .Where(c => c.Make!.ToLower() == make.ToLower())
+        //     .ProjectTo<VehicleViewModel>(_mapper.ConfigurationProvider)
+        //     .ToListAsync();
+        // }
 
         public async Task<List<VehicleViewModel>> ListAllVehiclesAsync()
         {
@@ -75,7 +75,7 @@ namespace Vehicles_API.Repositories
             }
 
             vehicle.RegNo = model.RegNo;
-            vehicle.Make = model.Make;
+            // vehicle.Make = model.Make;
             vehicle.Model = model.Model;
             vehicle.ModelYear = model.ModelYear;
             vehicle.Mileage = model.Mileage;

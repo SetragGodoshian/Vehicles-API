@@ -61,7 +61,8 @@ namespace Vehicles_API.Controllers
         [HttpGet("bymake/{make}")]
         public async Task<ActionResult<List<VehicleViewModel>>> GetVehiclesByMake(string make)
         {
-            return Ok(await _vehicleRepo.GetVehiclesByMakeAsync(make));
+            // return Ok(await _vehicleRepo.GetVehiclesByMakeAsync(make));
+            return Ok();
         }
 
         [HttpPost]

@@ -15,9 +15,7 @@ namespace Vehicles_API.Helpers
             CreateMap<PostVehicleViewModel, Vehicle>();
             CreateMap<Vehicle, VehicleViewModel>()
               .ForMember(dest => dest.VehicleId, options => options.
-              MapFrom(src => src.Id))
-              .ForMember(dest => dest.VehicleName, options => options.
-              MapFrom(src => string.Concat(src.Make, " ", src.Model)));
+              MapFrom(src => src.Id));
         }
     }
 }
