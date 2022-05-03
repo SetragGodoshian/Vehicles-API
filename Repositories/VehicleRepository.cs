@@ -24,7 +24,7 @@ namespace Vehicles_API.Repositories
             await _context.Vehicles.AddAsync(vehicleToAdd);
         }
 
-        public async Task DeleteVehicle(int id)
+        public async Task DeleteVehicleAsync(int id)
         {
             var response = await _context.Vehicles.FindAsync(id);
             if (response is not null)
@@ -42,9 +42,17 @@ namespace Vehicles_API.Repositories
 
         public async Task<VehicleViewModel?> GetVehicleAsync(string regNumber)
         {
-            return await _context.Vehicles.Where(c => c.RegNo == regNumber)
+            return await _context.Vehicles.Where(c => c.RegNo!.ToLower() == regNumber.ToLower())
             .ProjectTo<VehicleViewModel>(_mapper.ConfigurationProvider)
                 .SingleOrDefaultAsync();
+        }
+
+        public async Task<List<VehicleViewModel>> GetVehiclesByMakeAsync(string make)
+        {
+            return await _context.Vehicles
+            .Where(c => c.Make!.ToLower() == make.ToLower())
+            .ProjectTo<VehicleViewModel>(_mapper.ConfigurationProvider)
+            .ToListAsync();
         }
 
         public async Task<List<VehicleViewModel>> ListAllVehiclesAsync()
@@ -57,7 +65,7 @@ namespace Vehicles_API.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task UpdateVehicle(int id, PostVehicleViewModel model)
+        public async Task UpdateVehicleAsync(int id, PostVehicleViewModel model)
         {
             var vehicle = await _context.Vehicles.FindAsync(id);
 
@@ -74,6 +82,21 @@ namespace Vehicles_API.Repositories
 
             _context.Vehicles.Update(vehicle);
 
+        }
+
+        public async Task UpdateVehicleAsync(int id, PatchVehicleViewModel model)
+        {
+            var vehicle = await _context.Vehicles.FindAsync(id);
+
+            if (vehicle is null)
+            {
+                throw new Exception($"Vi kunde inte hitta något fordon med id: {id}");
+            }
+
+            vehicle.ModelYear = model.ModelYear;
+            vehicle.Mileage = model.Mileage;
+
+            _context.Vehicles.Update(vehicle);
         }
     }
 }

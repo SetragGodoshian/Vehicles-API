@@ -58,6 +58,12 @@ namespace Vehicles_API.Controllers
             return Ok(response);
         }
 
+        [HttpGet("bymake/{make}")]
+        public async Task<ActionResult<List<VehicleViewModel>>> GetVehiclesByMake(string make)
+        {
+            return Ok(await _vehicleRepo.GetVehiclesByMakeAsync(make));
+        }
+
         [HttpPost]
         public async Task<ActionResult> AddVehicle(PostVehicleViewModel model)
         {
@@ -74,8 +80,6 @@ namespace Vehicles_API.Controllers
             }
 
             return StatusCode(500, "Det gick inte att spara fordonet");
-
-
         }
 
         [HttpPut("{id}")]
@@ -83,7 +87,7 @@ namespace Vehicles_API.Controllers
         {
             try
             {
-                await _vehicleRepo.UpdateVehicle(id, model);
+                await _vehicleRepo.UpdateVehicleAsync(id, model);
                 if (await _vehicleRepo.SaveAllAsync())
                 {
                     return NoContent();
@@ -97,10 +101,29 @@ namespace Vehicles_API.Controllers
             }
         }
 
+        [HttpPatch("{id}")]
+        public async Task<ActionResult> UpdateVehicle(int id, PatchVehicleViewModel model)
+        {
+            try
+            {
+                await _vehicleRepo.UpdateVehicleAsync(id, model);
+
+                if (await _vehicleRepo.SaveAllAsync())
+                {
+                    return NoContent();
+                }
+                return StatusCode(500, "Ett fel inträffade när fordonet skulle uppdateras");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteVehicle(int id)
         {
-            await _vehicleRepo.DeleteVehicle(id);
+            await _vehicleRepo.DeleteVehicleAsync(id);
 
             if (await _vehicleRepo.SaveAllAsync())
             {
@@ -108,7 +131,6 @@ namespace Vehicles_API.Controllers
             }
 
             return StatusCode(500, "Hoppsan något gick fel");
-
         }
     }
 }
